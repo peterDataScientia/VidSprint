@@ -1,3 +1,5 @@
 streamlit
 requests
 yt-dlp[default]
+fastapi
+uvicorn[standard]

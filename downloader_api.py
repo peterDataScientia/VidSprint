@@ -1,10 +1,11 @@
 import os
 import re
+import hmac
 import shutil
 import tempfile
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Header, HTTPException
 from fastapi.responses import FileResponse
 from starlette.background import BackgroundTask
 from pydantic import BaseModel, Field
@@ -31,7 +32,11 @@ def health():
 
 
 @app.post("/download")
-def download(request: DownloadRequest):
+def download(request: DownloadRequest, x_vidsprint_token: str | None = Header(default=None)):
+    expected_token = os.getenv("DOWNLOADER_API_TOKEN", "").strip()
+    if expected_token and not hmac.compare_digest(x_vidsprint_token or "", expected_token):
+        raise HTTPException(status_code=401, detail="Invalid downloader service token.")
+
     if not request.authorized:
         raise HTTPException(
             status_code=400,

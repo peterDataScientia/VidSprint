@@ -201,7 +201,7 @@ if results:
         st.write(f"**Channel:** {selected['channel']}")
         st.write(f"**Duration:** {selected['duration']}  ·  **Views:** {selected['views']}")
         st.write(f"**Published:** {selected['published']}")
-        st.link_button("Open on YouTube", f"https://www.youtube.com/watch?v={selected['id']}")
+        st.video(f"https://www.youtube.com/watch?v={selected['id']}")
 
     st.divider()
     mode = st.radio("Download type", ["MP4 video", "MP3 audio"], horizontal=True)

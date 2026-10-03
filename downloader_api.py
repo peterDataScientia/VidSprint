@@ -77,6 +77,14 @@ def download(request: DownloadRequest, x_vidsprint_token: str | None = Header(de
         "js_runtimes": {"node": {}},
     }
 
+    # Optional private deployment support. This file must be supplied by the
+    # service owner as a Render Secret File; it is never accepted from users.
+    cookie_file = Path(
+        os.getenv("YOUTUBE_COOKIES_FILE", "/etc/secrets/youtube_cookies.txt")
+    )
+    if cookie_file.is_file():
+        options["cookiefile"] = str(cookie_file)
+
     if request.mode == "MP3 audio":
         options.update({
             "format": "bestaudio/best",

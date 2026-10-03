@@ -85,6 +85,10 @@ def download(request: DownloadRequest, x_vidsprint_token: str | None = Header(de
     if cookie_file.is_file():
         options["cookiefile"] = str(cookie_file)
 
+    local_browser = os.getenv("YTDLP_BROWSER", "").strip()
+    if local_browser:
+        options["cookiesfrombrowser"] = (local_browser, None, None, None)
+
     if request.mode == "MP3 audio":
         options.update({
             "format": "bestaudio/best",

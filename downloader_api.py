@@ -26,6 +26,24 @@ def safe_name(value: str) -> str:
     return (value[:120] or "vidsprint_download")
 
 
+def friendly_error(exc: Exception) -> str:
+    message = str(exc)
+    lowered = message.lower()
+    if "sign in to confirm" in lowered or "not a bot" in lowered:
+        return (
+            "YouTube blocked this server with an automated-traffic verification. "
+            "Search and playback still work. For content you own, use a private "
+            "local downloader or an authorized private server; VidSprint does not "
+            "collect browser cookies."
+        )
+    if "http error 403" in lowered:
+        return (
+            "YouTube rejected the stream request (HTTP 403). Try again later or "
+            "use a private authorized downloader for content you own."
+        )
+    return message
+
+
 @app.get("/health")
 def health():
     return {"status": "ok", "service": "vidsprint-downloader"}
@@ -103,4 +121,4 @@ def download(request: DownloadRequest, x_vidsprint_token: str | None = Header(de
             )
     except Exception as exc:
         shutil.rmtree(folder, ignore_errors=True)
-        raise HTTPException(status_code=502, detail=str(exc)) from exc
+        raise HTTPException(status_code=502, detail=friendly_error(exc)) from exc

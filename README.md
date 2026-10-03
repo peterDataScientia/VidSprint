@@ -64,6 +64,22 @@ https://your-downloader-service.example.com/health
 
 The response should contain `"status": "ok"`.
 
-The backend uses yt-dlp, Node.js, FFmpeg, temporary files, retries, a 500 MB limit, and automatic cleanup. It does not store user cookies.
+The backend uses yt-dlp, Node.js, FFmpeg, temporary files, retries, a 500 MB limit, and automatic cleanup.
+
+### Private authorized mode
+
+If YouTube asks the downloader to verify that it is not a bot, the service owner may add an authorized Netscape-format cookie export as a Render Secret File:
+
+```
+Filename: youtube_cookies.txt
+```
+
+The backend automatically reads it from:
+
+```
+/etc/secrets/youtube_cookies.txt
+```
+
+Only use this for content and an account you are authorized to access. Never commit the cookie file to GitHub, never expose it through Streamlit, and never ask public users to upload browser cookies. If the secret file is absent, the service runs without cookies and may be blocked by YouTube.
 
 Use this application only for content you own or have permission to download, and follow YouTube's terms and applicable copyright law.

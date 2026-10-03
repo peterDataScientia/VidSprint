@@ -162,6 +162,42 @@ def download_video(video_id: str, mode: str, quality: int, progress):
                 final_path = candidates[0]
             return final_path.read_bytes(), final_path.name
 
+def download_via_backend(video_id: str, mode: str, quality: int, progress):
+    backend_url = get_secret("DOWNLOADER_API_URL").rstrip("/")
+    if not backend_url:
+        raise RuntimeError("Downloader backend URL is not configured.")
+
+    progress.progress(0.05, text="Connecting to downloader…")
+    response = requests.post(
+        f"{backend_url}/download",
+        json={
+            "video_id": video_id,
+            "mode": mode,
+            "quality": quality,
+            "authorized": True,
+        },
+        timeout=900,
+    )
+    if response.status_code != 200:
+        try:
+            detail = response.json().get("detail", "Downloader service failed.")
+        except Exception:
+            detail = response.text or "Downloader service failed."
+        raise RuntimeError(detail)
+
+    content_type = response.headers.get("content-type", "")
+    if "application/json" in content_type:
+        raise RuntimeError(response.json().get("detail", "Downloader service failed."))
+
+    filename = "vidsprint_download.mp3" if mode == "MP3 audio" else "vidsprint_download.mp4"
+    disposition = response.headers.get("content-disposition", "")
+    match = re.search(r'filename="?([^";]+)"?', disposition)
+    if match:
+        filename = match.group(1)
+
+    progress.progress(1.0, text="File ready.")
+    return response.content, filename
+
 with st.form("search_form"):
     query = st.text_input("Search by keyword", placeholder="e.g. molecular dynamics tutorial")
     c1, c2, c3 = st.columns([1, 1, 1])
@@ -211,13 +247,22 @@ if results:
     if st.button("⚡ Prepare fast download", type="primary", disabled=not authorized):
         progress = st.progress(0, text="Preparing…")
         try:
-            st.session_state.download_bytes, st.session_state.download_name = download_video(
-                selected["id"], mode, quality, progress
-            )
+            if get_secret("DOWNLOADER_API_URL"):
+                st.session_state.download_bytes, st.session_state.download_name = download_via_backend(
+                    selected["id"], mode, quality, progress
+                )
+            else:
+                st.session_state.download_bytes, st.session_state.download_name = download_video(
+                    selected["id"], mode, quality, progress
+                )
             st.success("File ready.")
         except Exception as exc:
             st.session_state.download_bytes = None
             st.error(f"Download failed: {exc}")
+
+
+if get_secret("DOWNLOADER_API_URL"):
+    st.info("Fast downloader service connected.", icon="⚡")
 
 if st.session_state.download_bytes and st.session_state.download_name:
     mime = "audio/mpeg" if st.session_state.download_name.lower().endswith(".mp3") else "video/mp4"

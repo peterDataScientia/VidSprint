@@ -168,8 +168,14 @@ def download_via_backend(video_id: str, mode: str, quality: int, progress):
         raise RuntimeError("Downloader backend URL is not configured.")
 
     progress.progress(0.05, text="Connecting to downloader…")
+    headers = {}
+    downloader_token = get_secret("DOWNLOADER_API_TOKEN")
+    if downloader_token:
+        headers["X-VidSprint-Token"] = downloader_token
+
     response = requests.post(
         f"{backend_url}/download",
+        headers=headers,
         json={
             "video_id": video_id,
             "mode": mode,

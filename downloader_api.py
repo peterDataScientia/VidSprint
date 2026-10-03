@@ -6,6 +6,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
+from starlette.background import BackgroundTask
 from pydantic import BaseModel, Field
 import yt_dlp
 
@@ -93,7 +94,7 @@ def download(request: DownloadRequest):
                 final_path,
                 media_type="audio/mpeg" if extension == ".mp3" else "video/mp4",
                 filename=filename,
-                background=None,
+                background=BackgroundTask(shutil.rmtree, folder, ignore_errors=True),
             )
     except Exception as exc:
         shutil.rmtree(folder, ignore_errors=True)

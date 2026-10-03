@@ -130,6 +130,9 @@ def download_video(video_id: str, mode: str, quality: int, progress):
             "max_filesize": 500 * 1024 * 1024,
             "progress_hooks": [hook],
         }
+        local_browser = get_secret("YTDLP_BROWSER")
+        if local_browser:
+            options["cookiesfrombrowser"] = (local_browser, None, None, None)
         if mode == "MP3 audio":
             options.update({
                 "format": "bestaudio/best",
